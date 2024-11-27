@@ -1,0 +1,147 @@
+package fitpeoTest;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.JavascriptExecutor;
+import io.github.bonigarcia.wdm.WebDriverManager;
+public class SeleniumAutomationAssignment {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+			
+	     WebDriverManager.firefoxdriver().setup();
+		 WebDriver driver = new FirefoxDriver();
+
+		        try {
+		            // Step 1: Navigate to FitPeo Homepage
+		            driver.get("https://fitpeo.com");
+		            driver.manage().window().maximize();
+		            System.out.println("Navigated to FitPeo Homepage");
+
+		            // Step 2: Navigate to Revenue Calculator Page
+		            if (driver.findElement(By.xpath("//button[@aria-label='open drawer']")).isDisplayed()) {
+		                driver.findElement(By.xpath("//span[contains(text(),'Revenue Calculator')]")).click();
+		            } else {
+		                driver.findElement(By.xpath("//div[contains(text(),'Revenue Calculator')]")).click();
+		            }
+		            Thread.sleep(5000);
+		            System.out.println("Navigated to Revenue Calculator Page");
+
+		            // Step 3: Scroll to the slider section
+		            WebElement sliderRevenue = driver.findElement(By.xpath("//input[@type='range']"));
+		            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", sliderRevenue);
+
+		            if (sliderRevenue.isDisplayed()) {
+		                System.out.println("Slider is visible.");
+		            } else {
+		                System.out.println("Slider is not visible.");
+		                return;
+		            }
+
+		            // Step 4: Adjust the slider to 820
+		            
+		            WebElement valueDisplay = driver.findElement(By.xpath("//input[@type='number']"));
+		            adjustSlider(driver, sliderRevenue, valueDisplay, 820);
+
+		            
+		            // Step 5: Update the text field to 560
+		            valueDisplay.clear();
+		            valueDisplay.sendKeys("560");
+		            Thread.sleep(2000);
+
+		            int updatedValue = Integer.parseInt(valueDisplay.getAttribute("value"));
+		            if (updatedValue == 560) {
+		                System.out.println("Slider value updated to 560 via text field.");
+		            } else {
+		                System.out.println("Failed to update slider value via text field.");
+		            }
+
+		            // Step 6: Select CPT codes
+		            selectCPTCode(driver, "CPT-99091");
+		            selectCPTCode(driver, "CPT-99453");
+		            selectCPTCode(driver, "CPT-99454");
+		            selectCPTCode(driver, "CPT-99474");
+		            System.out.println("Selected all required CPT codes.");
+
+		            // Step 7: Validate Total Recurring Reimbursement
+		            String expectedHeader = "Total Recurring Reimbursement for all Patients Per Month:\n$110700";
+		            WebElement headerElement = driver.findElement(By.xpath("(//div[contains(@class,'MuiBox')]/header/div/p)[4]"));
+		            String actualHeader = headerElement.getText();
+
+		            if (expectedHeader.equals(actualHeader)) {
+		                System.out.println("Total Recurring Reimbursement validated successfully: $110700.");
+		            } else {
+		                System.out.println("Validation failed. Expected: $110700, but found: " + actualHeader);
+		            }
+
+		        } catch (Exception e) {
+		            System.out.println("Something went wrong during the test execution: " + e.getMessage());
+		        } finally {
+		            // Close the browser
+		            driver.quit();
+		            System.out.println("Test execution completed.");
+		        }
+		    }
+
+	 private static void navigateToRevenueCalculator(WebDriver driver) throws InterruptedException {
+	        if (driver.findElement(By.xpath("//button[@aria-label='open drawer']")).isDisplayed()) {
+	            driver.findElement(By.xpath("//span[contains(text(),'Revenue Calculator')]")).click();
+	        } else {
+	            driver.findElement(By.xpath("//div[contains(text(),'Revenue Calculator')]")).click();
+	        }
+	        Thread.sleep(5000);
+	        System.out.println("Navigated to Revenue Calculator Page");
+	    }
+
+	    private static void adjustSlider(WebDriver driver, WebElement slider, WebElement valueDisplay, int targetValue) throws InterruptedException {
+	        int currentValue = Integer.parseInt(valueDisplay.getAttribute("value"));
+
+	        if (currentValue == targetValue) {
+	            System.out.println("Slider is already at the target value: " + targetValue);
+	            return;
+	        }
+
+	        // Use JavaScript for precise movement
+	        ((JavascriptExecutor) driver).executeScript("arguments[0].value=arguments[1]; arguments[0].dispatchEvent(new Event('input'));", slider, targetValue);
+	        Thread.sleep(2000); // Wait for changes to reflect in the UI
+
+	        int newValue = Integer.parseInt(valueDisplay.getAttribute("value"));
+	        if (newValue == targetValue) {
+	            System.out.println("Slider successfully adjusted to: " + targetValue);
+	        } else {
+	            System.out.println("Failed to adjust slider to target value. Current value: " + newValue);
+	        }
+	    }
+
+	    private static void selectCPTCode(WebDriver driver, String cptCode) {
+	        try {
+	            String xpath = String.format("//div/p[contains(text(),'%s')]//following-sibling::label/span/input", cptCode);
+	            WebElement checkbox = driver.findElement(By.xpath(xpath));
+	            if (!checkbox.isSelected()) {
+	                checkbox.click();
+	                System.out.println(cptCode + " selected.");
+	            } else {
+	                System.out.println(cptCode + " was already selected.");
+	            }
+	        } catch (Exception e) {
+	            System.out.println("Failed to select CPT code: " + cptCode);
+	        }
+	    }
+
+	    private static void validateReimbursement(WebDriver driver, String expectedHeader) {
+	        try {
+	            WebElement headerElement = driver.findElement(By.xpath("(//div[contains(@class,'MuiBox')]/header/div/p)[4]"));
+	            String actualHeader = headerElement.getText().trim();
+
+	            if (expectedHeader.equals(actualHeader)) {
+	                System.out.println("Total Recurring Reimbursement validated successfully: " + expectedHeader);
+	            } else {
+	                System.out.println("Validation failed. Expected: " + expectedHeader + ", but found: " + actualHeader);
+	            }
+	        } catch (Exception e) {
+	            System.out.println("Failed to validate reimbursement header: " + e.getMessage());
+	        }
+	    }
+	}	    
